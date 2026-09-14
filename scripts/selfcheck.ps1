@@ -33,7 +33,7 @@ if ($desc -notmatch 'COMPLETED') { Write-Output "FAIL missing goal completion st
 if ($desc -notmatch 'canonical_name: DaiYu-Agent') { Write-Output "FAIL missing canonical name metadata"; $fail = $true }
 if ($desc -notmatch 'display_name: 黛玉Agent') { Write-Output "FAIL missing display name metadata"; $fail = $true }
 if ($desc -notmatch 'repository: https://github.com/vx-zsck2020/DaiYu-Agent.git') { Write-Output "FAIL missing repository metadata"; $fail = $true }
-if ($desc -notmatch '(?m)^name: daiyu-agent$') { Write-Output "FAIL invalid standard skill id"; $fail = $true }
+if ($desc -notmatch '(?m)^name: daiyu-agent\r?$') { Write-Output "FAIL invalid standard skill id"; $fail = $true }
 if ($desc -notmatch 'legacy_aliases') { Write-Output "FAIL missing legacy alias metadata"; $fail = $true }
 if ($desc -notmatch 'control_plane_version') { Write-Output "FAIL missing control plane version"; $fail = $true }
 if ($desc -notmatch 'last_event_id') { Write-Output "FAIL missing event cursor"; $fail = $true }
