@@ -1,0 +1,7 @@
+interface:
+  display_name: "黛玉Agent"
+  short_description: "Goal驱动的多Agent并发全自动软件开发工作流"
+  brand_color: "#8B3A62"
+  default_prompt: "Use $daiyu-agent to coordinate this software task with Goal tracking, parallel agents, quality gates, security review, and verified delivery."
+policy:
+  allow_implicit_invocation: true

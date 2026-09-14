@@ -1,0 +1,21 @@
+name: Validate DaiYu-Agent
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run self-check
+        shell: pwsh
+        run: ./scripts/selfcheck.ps1
+      - name: Validate required metadata
+        shell: pwsh
+        run: |
+          $skill = Get-Content ./SKILL.md -Raw
+          if ($skill -notmatch '(?m)^name: daiyu-agent$') { exit 1 }
+          if ($skill -notmatch 'repository: https://github.com/vx-zsck2020/DaiYu-Agent.git') { exit 1 }
+          if (-not (Test-Path ./agents/openai.yaml)) { exit 1 }
