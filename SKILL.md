@@ -129,6 +129,7 @@ last_event_id: 0
 ## 批次
 - batch: —
 - ownership: ownership.md
+- fast_path: true|false
 
 ## 闸日志
 <!-- Gate N | status | report path | note -->
@@ -164,6 +165,25 @@ last_event_id: 0
 - **两侧路径皆非空** → 必须 FE∥BE 并行
 - **方案未写清一侧是否需要** → 回②补 `ownership.md`，禁止凭①摸底报告抢开③
 
+## 小范围快路径（MUST）
+
+当且仅当②冻结时**同时**满足，本批标记 `fast_path: true`，否则 `false`：
+
+1. `plan.md`「验收清单」下条目 ≤ 5（只计以 `-` 开头的项）
+2. `ownership.md` 路径/glob 条目 ≤ 8，且指向已存在文件或目录（禁止本批新建顶层包）
+3. `plan.md` 写明 `stack_change: none`（不引入新语言、框架或包管理器）
+
+快路径允许且只允许：
+
+- `stack-decision.md` 仅含 `mode: reuse`、现有栈一句、`change: none`；禁止候选矩阵
+- `token-budget.md` 可抄默认预算表，不必重写分层长文
+- ③ 仍必须双 Task
+- ③V 只写「## 影响清单」3–5 条；禁止下过/打回、禁止粘贴 diff
+- ④ 只逐条勾验收清单；禁止复述 ③V、禁止粘贴 diff
+- ⑤ 仍真跑可执行验收项
+
+谓词任一不满足 → 全量②（完整 `stack-decision.md`）。禁止把快路径用于新栈或新项目脚手架。`fast_path` 写入 `plan.md` 与 ledger「批次」。
+
 ## 硬规则
 
 1. 无冻结 `plan.md`（验收清单非空）→ 禁止开③写码
@@ -182,6 +202,7 @@ last_event_id: 0
 14. **Goal 阻塞判定**：Task `FAILED` 只结束当前 Task/批次，不自动把 Goal 置为 `BLOCKED`；同一外部阻塞 fingerprint 连续复现至少 3 个调度回合且补上下文/拆批/换策均无进展，才可写 `BLOCKED`。心跳失败先置 `PAUSED`，恢复或重派后重新计数。
 15. **Goal 完成守卫**：任何 `update_goal(COMPLETED)` 必须原子校验 `gate=6`、①-⑤均 PASS、`g6-close.md` 存在、验收通过且有人确认；失败写入拒绝事件，不得越级。
 16. **到闸语义**：`到<闸>` 表示完成该闸后停止，不自动进入下一闸；若阻塞，Goal 保持 `PAUSED` 或 `BLOCKED` 并写入 `resume_from`。
+17. **快路径谓词不满足时禁止 `mode: reuse`**；③V 在快路径下写出审查结论或④复述 diff → 本闸未过，重派。
 
 ## CHECKPOINT · STOP
 
@@ -233,6 +254,8 @@ Lead fan-in：先读报告 YAML 头；仅 `status` 非 DONE 时才读正文。
 | Task 工具不可用 | Lead 串行执行同一槽位规则并标 `dry_run` | 连续 2 槽 dry_run → **CHECKPOINT** |
 | Goal 工具不可用 | `goal_backend: ledger-fallback` | 禁止伪造 create/get/update 结果 |
 | `继续*` 且扫不到 ledger | **CHECKPOINT** 问目标或路径 | 人仍不给 → `BLOCKED`，禁止静默新建 |
+| 快路径谓词失败却 reuse 栈 | 回②补完整 `stack-decision.md` | 再冒用 → 打回方案 |
+| 快路径 ③V 写下过/打回 | 重派 ③V，只保留影响清单 | 第 3 次 → 停闸 |
 
 ## 一页结论（对人）
 
@@ -268,6 +291,9 @@ Lead fan-in：先读报告 YAML 头；仅 `status` 非 DONE 时才读正文。
 | 测红继续开需求 | 停 + 修复单 |
 | 只记 todo 不写 ledger | 必须写 ledger |
 | `继续黛玉` 找不到台账却新建 | CHECKPOINT 问路径，禁止静默新建 |
+| 小改却重写技术栈矩阵 | 快路径：`mode: reuse` |
+| 快路径下 ③V 写满审查结论 | 只出 3–5 条影响清单 |
+| ④ 复述 diff 或 ③V | 只勾验收清单 |
 
 ## Do not use
 
@@ -278,9 +304,9 @@ Lead fan-in：先读报告 YAML 头；仅 `status` 非 DONE 时才读正文。
 ## 前端、后端与 Token 默认工程规范（MUST）
 
 - 管理后台默认使用 DevUI Admin Page：<https://devui.design/admin-page/docs/getting-started>；普通前端默认使用 DevUI：<https://devui.design/home>；图标默认使用 DevUI Icon：<https://devui.design/icon/ruleResource>。
-- ② 必须产出 `stack-decision.md`，记录产品形态、组件库、图标来源、主题/响应式/无障碍策略、后端候选矩阵、评分、最终选择、放弃项、迁移回滚方案与验证指标。
-- 后端选型必须基于语言约束、流量/延迟、数据模型、部署环境、现有依赖、团队能力与合规边界；③ 只实现冻结选型，变化先回流②。
-- ② 必须产出 `token-budget.md`：按 Goal/闸/Task 分配预算；写明装箱清单（前缀/指针/增量）与 70%/85%/95% 动作。
+- ② 必须产出 `stack-decision.md`。`fast_path: false` 时写完整选型（形态、组件库、图标、主题/响应式/无障碍、后端候选矩阵、评分、选择、放弃项、回滚与验证指标）。`fast_path: true` 时仅 `mode: reuse` stub。已有设计系统优先尊重，不得为过 DevUI 默认而改栈。
+- 后端选型（全量）必须基于语言约束、流量/延迟、数据模型、部署环境、现有依赖、团队能力与合规边界；③ 只实现冻结选型，变化先回流②。
+- ② 必须产出 `token-budget.md`：快路径可抄默认预算表；全量写 Goal/闸/Task 预算、装箱清单与 70%/85%/95% 动作。
 
 ## 控制面状态机
 

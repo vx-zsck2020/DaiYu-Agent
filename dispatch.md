@@ -64,19 +64,28 @@ REPORT: <报告相对路径>
 
 - [ ] `plan.md` 已冻结且验收清单非空
 - [ ] `ownership.md` 已写，FE/BE 路径无交集（契约文件最多一侧）
-- [ ] `stack-decision.md` 与 `token-budget.md` 已写
+- [ ] `stack-decision.md` 与 `token-budget.md` 已写（快路径允许 `mode: reuse` stub）
+- [ ] ledger / plan 已写 `fast_path: true|false`
 - [ ] 两个 Task 的 `prompt` 都含 **只改所有权内路径**
 - [ ] 除此之外无第三个写码 Task
 - [ ] **并发硬门槛：至少两个 Task 已同发；单侧项目为实现 + 独立验证/影响分析**
 - [ ] 记录 `parallel_batch_id`、两个 Task 的启动时间、报告路径和完成状态
 
+## ③V 派发要点
+
+- 只读；与实现槽同发；不得修改产品代码
+- `fast_path: true`：报告只有「## 影响清单」3–5 条；禁止过/打回、禁止粘贴 diff；`output_max_lines` 40
+- `fast_path: false`：可列越权/契约/遗漏，仍不得代替④下结论
+- Lead：快路径下出现审查结论标签或 diff 正文 → 判③未过并重派 ③V
+
 ## ④ 独立质量审查派发要点
 
 - reviewer **不得**是本批③写码槽；Lead 不得代写 `g4-review.md`
-- prompt 写明：**禁止修改产品代码**；只对照验收清单 + packed diff
-- 装箱：验收清单摘录、ownership glob、`packed_diff_path`、g3 报告路径；禁止全库 grep、禁止粘贴 g3 全文
+- prompt 写明：**禁止修改产品代码**；只对照验收清单；diff 只给 `packed_diff_path`
+- 装箱：验收清单摘录、ownership glob、`packed_diff_path`、g3 报告路径；禁止全库 grep、禁止粘贴 g3 全文与 diff 正文
+- `fast_path: true`：只逐条勾验收；禁止复述 ③V
 - 报告必须有 **「## 质量审查」** 与结论标签：过 / 打回方案 / 打回前端 / 打回后端 / 仅修测障
-- Lead：无该专节或 reviewer 越权写码 → 判未过并重派，禁止进⑤
+- Lead：无该专节、越权写码、或快路径下复述 diff → 判未过并重派，禁止进⑤
 
 ## ⑤ 功能测试派发要点
 
@@ -91,7 +100,7 @@ REPORT: <报告相对路径>
 1. 读 `REPORT` 文件的 YAML 头（不要只信 SUMMARY）
 2. 校验统一 evidence schema：Goal 标识、`gate`、`batch_id`、`task_id`、`attempt_id`、`parallel_batch_id`、`status`、`evidence_path`、`commands`、`exit_codes`。不一致则当前闸失败
 3. 校验③是否确有至少两个并发 Task 报告，并核对同一 `parallel_batch_id` 的启动/完成记录；不足则不得进入④
-4. 校验④有「## 质量审查」、⑤有命令与退出码
+4. 校验④有「## 质量审查」、⑤有命令与退出码；若 `fast_path: true`，再校验 ③V 仅有影响清单且④未粘贴 diff
 5. 更新 `ledger.md` 勾选、Goal 状态与闸日志
 6. 默认模式 → 一页结论等人（含审查/测试结论和 Goal 状态）
 7. 连续模式 → 按 SKILL 自进或 STOP（打回/测红/阻塞必停）

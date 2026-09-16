@@ -7,7 +7,7 @@
   {
     "id": 2,
     "prompt": "黛玉 连续 只改前端空状态文案",
-    "expected": "单侧仍并发实现+验证；④独立 reviewer；prompt 装箱不贴 SKILL 全文；⑤只跑功能测试"
+    "expected": "快路径：stack-decision mode reuse、不写候选矩阵；③ 仍双槽但 ③V 只出 3–5 条影响清单；④ 只勾验收；不贴 SKILL 全文"
   },
   {
     "id": 3,

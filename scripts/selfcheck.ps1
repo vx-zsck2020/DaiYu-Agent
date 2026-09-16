@@ -59,6 +59,10 @@ if ($desc -notmatch 'create_goal') { Write-Output "FAIL missing create_goal bind
 if ($desc -notmatch 'get_goal') { Write-Output "FAIL missing get_goal binding"; $fail = $true }
 if ($desc -notmatch 'update_goal') { Write-Output "FAIL missing update_goal binding"; $fail = $true }
 if ($desc -notmatch '独立 reviewer|独立质量审查') { Write-Output "FAIL missing independent reviewer contract"; $fail = $true }
+if ($desc -notmatch '小范围快路径') { Write-Output "FAIL missing fast path section"; $fail = $true }
+if ($desc -notmatch 'fast_path') { Write-Output "FAIL missing fast_path field"; $fail = $true }
+if ($desc -notmatch 'mode: reuse') { Write-Output "FAIL missing stack reuse mode"; $fail = $true }
+if ($desc -notmatch '影响清单') { Write-Output "FAIL missing impact-list contract for verifier"; $fail = $true }
 
 $fm = [regex]::Match($desc, '(?s)^---\r?\n(.*?)\r?\n---')
 if ($fm.Success -and $fm.Groups[1].Value -match '①.*②.*③.*④.*⑤') {
@@ -101,6 +105,14 @@ if (-not (Select-String -Path $dispatch -Pattern 'g3-verify.md' -Quiet)) {
   Write-Output "FAIL dispatch missing single-side verification report"
   $fail = $true
 }
+if (-not (Select-String -Path $dispatch -Pattern '③V 派发要点' -Quiet)) {
+  Write-Output "FAIL dispatch missing verifier dispatch section"
+  $fail = $true
+}
+if (-not (Select-String -Path $dispatch -Pattern 'fast_path' -Quiet)) {
+  Write-Output "FAIL dispatch missing fast_path checks"
+  $fail = $true
+}
 if (Select-String -Path $dispatch -Pattern '安全审查|攻防测试|打回安全' -Quiet) {
   Write-Output "FAIL dispatch still contains security/attack gates"
   $fail = $true
@@ -113,6 +125,14 @@ if (-not (Select-String -Path $slots -Pattern '③V 独立验证' -Quiet)) {
 }
 if (-not (Select-String -Path $slots -Pattern '## 质量审查' -Quiet)) {
   Write-Output "FAIL slot-prompts missing quality review section name"
+  $fail = $true
+}
+if (-not (Select-String -Path $slots -Pattern '影响清单' -Quiet)) {
+  Write-Output "FAIL slot-prompts missing impact list for verifier"
+  $fail = $true
+}
+if (-not (Select-String -Path $slots -Pattern 'fast_path|mode: reuse' -Quiet)) {
+  Write-Output "FAIL slot-prompts missing fast path guidance"
   $fail = $true
 }
 if (Select-String -Path $slots -Pattern 'security.md|攻防测试|打回安全' -Quiet) {
@@ -128,6 +148,7 @@ if (-not (Select-String -Path $examples -Pattern '单侧项目也必须并发' -
 if (-not (Select-String -Path $examples -Pattern 'Goal 恢复' -Quiet)) { Write-Output "FAIL examples missing Goal recovery case"; $fail = $true }
 if (-not (Select-String -Path $examples -Pattern 'Token 装箱' -Quiet)) { Write-Output "FAIL examples missing token packing case"; $fail = $true }
 if (-not (Select-String -Path $examples -Pattern 'work/DaiYu-Agent' -Quiet)) { Write-Output "FAIL examples missing current workspace path"; $fail = $true }
+if (-not (Select-String -Path $examples -Pattern '小范围快路径' -Quiet)) { Write-Output "FAIL examples missing fast path case U10"; $fail = $true }
 
 $evidence = Join-Path $root "evidence-schema.md"
 foreach ($field in @('attempt_id','parallel_batch_id','evidence_path','packed_diff_path','registry_profile','usage_source','token_event','context_files','output_max_lines')) {
