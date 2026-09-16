@@ -1,5 +1,5 @@
 $root = Split-Path -Parent $PSScriptRoot
-$need = @("SKILL.md", "README.md", "LICENSE", "VERSION", "CHANGELOG.md", "dispatch.md", "slot-prompts.md", "diagrams.md", "examples.md", "security.md", "agent-registry.md", "control-plane.md", "evidence-schema.md")
+$need = @("SKILL.md", "README.md", "LICENSE", "VERSION", "CHANGELOG.md", "dispatch.md", "slot-prompts.md", "diagrams.md", "examples.md", "agent-registry.md", "control-plane.md", "evidence-schema.md")
 $fail = $false
 
 foreach ($f in $need) {
@@ -13,6 +13,11 @@ foreach ($f in $need) {
   }
 }
 
+if (Test-Path (Join-Path $root "security.md")) {
+  Write-Output "FAIL security.md must be removed from the pipeline"
+  $fail = $true
+}
+
 $skillPath = Join-Path $root "SKILL.md"
 $desc = Get-Content $skillPath -Raw -Encoding utf8
 
@@ -22,10 +27,12 @@ if ($desc -notmatch '黛玉') { Write-Output "FAIL missing primary trigger 黛�
 if ($desc -notmatch 'ACTION REQUIRED') { Write-Output "FAIL missing ACTION REQUIRED"; $fail = $true }
 if ($desc -notmatch 'work/six-gates') { Write-Output "FAIL missing ledger path"; $fail = $true }
 if ($desc -notmatch 'dispatch\.md') { Write-Output "FAIL missing dispatch link"; $fail = $true }
-if ($desc -notmatch 'security\.md') { Write-Output "FAIL missing security.md link"; $fail = $true }
-if ($desc -notmatch '打回安全') { Write-Output "FAIL missing 打回安全 label"; $fail = $true }
-if ($desc -notmatch '攻防') { Write-Output "FAIL missing 攻防 requirement"; $fail = $true }
-if ($desc -notmatch 'security_required:\s*true') { Write-Output "FAIL missing security_required ledger field"; $fail = $true }
+if ($desc -match 'security\.md') { Write-Output "FAIL SKILL.md must not require security.md"; $fail = $true }
+if ($desc -match '打回安全') { Write-Output "FAIL leftover 打回安全 label"; $fail = $true }
+if ($desc -notmatch 'CHECKPOINT') { Write-Output "FAIL missing CHECKPOINT marker"; $fail = $true }
+if ($desc -notmatch '一线修复') { Write-Output "FAIL missing fallback first-line repair"; $fail = $true }
+if ($desc -notmatch '仍失败兜底') { Write-Output "FAIL missing fallback last resort"; $fail = $true }
+if ($desc -notmatch 'Token 装箱') { Write-Output "FAIL missing token packing protocol"; $fail = $true }
 if ($desc -notmatch '多 Agent 协同与并发是硬要求[\s\S]*?至少 2 个 Task') { Write-Output "FAIL missing mandatory multi-agent concurrency"; $fail = $true }
 if ($desc -notmatch 'goal_id') { Write-Output "FAIL missing goal_id contract"; $fail = $true }
 if ($desc -notmatch 'goal_status') { Write-Output "FAIL missing goal_status contract"; $fail = $true }
@@ -51,6 +58,7 @@ if ($desc -match 'goal_status:[\s]*ACTIVE\|PAUSED\|BLOCKED\|COMPLETE\|') { Write
 if ($desc -notmatch 'create_goal') { Write-Output "FAIL missing create_goal binding"; $fail = $true }
 if ($desc -notmatch 'get_goal') { Write-Output "FAIL missing get_goal binding"; $fail = $true }
 if ($desc -notmatch 'update_goal') { Write-Output "FAIL missing update_goal binding"; $fail = $true }
+if ($desc -notmatch '独立 reviewer|独立质量审查') { Write-Output "FAIL missing independent reviewer contract"; $fail = $true }
 
 $fm = [regex]::Match($desc, '(?s)^---\r?\n(.*?)\r?\n---')
 if ($fm.Success -and $fm.Groups[1].Value -match '①.*②.*③.*④.*⑤') {
@@ -62,16 +70,16 @@ if (-not (Select-String -Path $dispatch -Pattern 'STATUS: DONE' -Quiet)) {
   Write-Output "FAIL dispatch missing STATUS protocol"
   $fail = $true
 }
-if (-not (Select-String -Path $dispatch -Pattern '安全审查' -Quiet)) {
-  Write-Output "FAIL dispatch missing 安全审查"
+if (-not (Select-String -Path $dispatch -Pattern '质量审查' -Quiet)) {
+  Write-Output "FAIL dispatch missing 质量审查"
   $fail = $true
 }
-if (-not (Select-String -Path $dispatch -Pattern '攻防' -Quiet)) {
-  Write-Output "FAIL dispatch missing 攻防"
+if (-not (Select-String -Path $dispatch -Pattern 'Token 装箱' -Quiet)) {
+  Write-Output "FAIL dispatch missing Token packing"
   $fail = $true
 }
-if (-not (Select-String -Path $dispatch -Pattern '授权状态' -Quiet)) {
-  Write-Output "FAIL dispatch missing authorization status input"
+if (-not (Select-String -Path $dispatch -Pattern 'packed_diff_path' -Quiet)) {
+  Write-Output "FAIL dispatch missing packed_diff_path"
   $fail = $true
 }
 if (-not (Select-String -Path $dispatch -Pattern '只改所有权内路径' -Quiet)) {
@@ -84,7 +92,7 @@ if (-not (Select-String -Path $dispatch -Pattern 'parallel_batch_id' -Quiet)) {
 }
 if (-not (Select-String -Path $dispatch -Pattern 'goal_id' -Quiet)) { Write-Output "FAIL dispatch missing goal binding"; $fail = $true }
 if (-not (Select-String -Path $dispatch -Pattern 'platform-neutral|平台中立' -Quiet)) { Write-Output "FAIL dispatch missing platform-neutral contract"; $fail = $true }
-if (-not (Select-String -Path $dispatch -Pattern '同一 Task.*质量与安全|质量与安全两专节' -Quiet)) { Write-Output "FAIL dispatch missing unified reviewer contract"; $fail = $true }
+if (-not (Select-String -Path $dispatch -Pattern '禁止修改产品代码' -Quiet)) { Write-Output "FAIL dispatch missing reviewer no-code contract"; $fail = $true }
 if (-not (Select-String -Path $dispatch -Pattern 'token_budget' -Quiet)) { Write-Output "FAIL dispatch missing token budget input"; $fail = $true }
 if (-not (Select-String -Path $dispatch -Pattern 'agent-registry' -Quiet)) { Write-Output "FAIL dispatch missing registry contract"; $fail = $true }
 if (-not (Select-String -Path $dispatch -Pattern 'evidence-schema' -Quiet)) { Write-Output "FAIL dispatch missing evidence contract"; $fail = $true }
@@ -93,29 +101,22 @@ if (-not (Select-String -Path $dispatch -Pattern 'g3-verify.md' -Quiet)) {
   Write-Output "FAIL dispatch missing single-side verification report"
   $fail = $true
 }
+if (Select-String -Path $dispatch -Pattern '安全审查|攻防测试|打回安全' -Quiet) {
+  Write-Output "FAIL dispatch still contains security/attack gates"
+  $fail = $true
+}
 
 $slots = Join-Path $root "slot-prompts.md"
-if (-not (Select-String -Path $slots -Pattern 'security.md' -Quiet)) {
-  Write-Output "FAIL slot-prompts missing security.md reference"
+if (-not (Select-String -Path $slots -Pattern '③V 独立验证' -Quiet)) {
+  Write-Output "FAIL slot-prompts missing verifier slot"
   $fail = $true
 }
-
-$sec = Join-Path $root "security.md"
-if (-not (Select-String -Path $sec -Pattern '## ② 方案必须写的威胁面' -Quiet)) { Write-Output "FAIL security.md missing threat-surface section"; $fail = $true }
-if (-not (Select-String -Path $sec -Pattern 'attack_act=skipped_no_auth' -Quiet)) {
-  Write-Output "FAIL security.md missing no-auth marker"
+if (-not (Select-String -Path $slots -Pattern '## 质量审查' -Quiet)) {
+  Write-Output "FAIL slot-prompts missing quality review section name"
   $fail = $true
 }
-if (-not (Select-String -Path $sec -Pattern '威胁面' -Quiet)) {
-  Write-Output "FAIL security.md missing 威胁面"
-  $fail = $true
-}
-if (-not (Select-String -Path $sec -Pattern '## ④ 安全审查专节' -Quiet)) {
-  Write-Output "FAIL security.md missing gate 4 section"
-  $fail = $true
-}
-if (-not (Select-String -Path $sec -Pattern '## ⑤ 攻防测试专节' -Quiet)) {
-  Write-Output "FAIL security.md missing gate 5 section"
+if (Select-String -Path $slots -Pattern 'security.md|攻防测试|打回安全' -Quiet) {
+  Write-Output "FAIL slot-prompts still contains security/attack gates"
   $fail = $true
 }
 
@@ -125,10 +126,16 @@ if (-not (Select-String -Path $examples -Pattern '单侧项目也必须并发' -
   $fail = $true
 }
 if (-not (Select-String -Path $examples -Pattern 'Goal 恢复' -Quiet)) { Write-Output "FAIL examples missing Goal recovery case"; $fail = $true }
+if (-not (Select-String -Path $examples -Pattern 'Token 装箱' -Quiet)) { Write-Output "FAIL examples missing token packing case"; $fail = $true }
+if (-not (Select-String -Path $examples -Pattern 'work/DaiYu-Agent' -Quiet)) { Write-Output "FAIL examples missing current workspace path"; $fail = $true }
 
 $evidence = Join-Path $root "evidence-schema.md"
-foreach ($field in @('attempt_id','parallel_batch_id','evidence_path','attack_scope','auth_evidence','registry_profile','usage_source','token_event')) {
+foreach ($field in @('attempt_id','parallel_batch_id','evidence_path','packed_diff_path','registry_profile','usage_source','token_event','context_files','output_max_lines')) {
   if (-not (Select-String -Path $evidence -Pattern ([regex]::Escape($field)) -Quiet)) { Write-Output "FAIL evidence schema missing $field"; $fail = $true }
+}
+if (Select-String -Path $evidence -Pattern 'attack_scope|attack_act|auth_evidence' -Quiet) {
+  Write-Output "FAIL evidence schema still contains attack fields"
+  $fail = $true
 }
 
 if ($fail) {
@@ -138,5 +145,3 @@ if ($fail) {
 
 Write-Output "PASS DaiYu-Agent selfcheck"
 exit 0
-
-

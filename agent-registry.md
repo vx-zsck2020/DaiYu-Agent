@@ -9,8 +9,8 @@
 | `frontend` | ownership 前端路径 | ③FE | `g3-fe.md` | 1 写码槽 |
 | `backend` | ownership 后端路径 | ③BE | `g3-be.md` | 1 写码槽 |
 | `verifier` | 只读 | ③V | `g3-verify.md` | 1 Task |
-| `reviewer` | 只读 | ④ | `g4-review.md` | 1 Task |
-| `tester` | 按授权范围测试 | ⑤ | `g5-test.md` | 1 Task |
+| `reviewer` | 只读 | ④ | `g4-review.md` | 1 Task；不得由本批写码槽担任 |
+| `tester` | 本地测试 | ⑤ | `g5-test.md` | 1 Task |
 | `closer` | 只读 | ⑥ | `g6-close.md` | 1 Task |
 
-每个 profile 必须声明：`goal_id`、`parallel_batch_id`、`allowed_paths`、`network_profile`、`token_budget`、`output_max_lines`。
+每个 profile 必须声明：Goal 标识、`parallel_batch_id`、`allowed_paths`、`network_profile`、`token_budget`、`output_max_lines`、`context_files`。

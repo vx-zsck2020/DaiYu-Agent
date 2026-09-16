@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "黛玉 为现有后台增加角色列表页",
+    "expected": "建 work/DaiYu-Agent ledger，派①摸底且不写码；默认模式 CHECKPOINT 等人；不启用安全/攻防闸"
+  },
+  {
+    "id": 2,
+    "prompt": "黛玉 连续 只改前端空状态文案",
+    "expected": "单侧仍并发实现+验证；④独立 reviewer；prompt 装箱不贴 SKILL 全文；⑤只跑功能测试"
+  },
+  {
+    "id": 3,
+    "prompt": "继续黛玉",
+    "expected": "读已有 ledger 从下一未勾闸恢复，不重派已完成闸，不新建 Goal"
+  }
+]

@@ -2,36 +2,33 @@
 
 ```mermaid
 flowchart TB
-  YOU["👤 Owner"]
+  YOU["Owner"]
   L["Lead"]
   YOU --> L
   L --> G1["① 摸底"]
-  G1 --> G2["② 方案+威胁面"]
-  G2 --> G3["③ FE∥BE"]
-  G3 --> G4["④ 质量+安全审查"]
-  G4 --> G5["⑤ 功能+攻防"]
+  G1 --> G2["② 方案冻结"]
+  G2 --> G3["③ FE∥BE 或 实现∥验证"]
+  G3 --> G4["④ 独立质量审查"]
+  G4 --> G5["⑤ 功能测试"]
   G5 --> G6["⑥ 收口"]
-  G4 -.->|打回/安红| G3
-  G5 -.->|测红/攻防红| G3
+  G4 -.->|打回| G3
+  G5 -.->|测红| G3
   G4 -.->|契约| G2
 ```
 
 ```mermaid
 flowchart LR
-  subgraph g4["④ 强制两专节"]
-    Q["质量对照验收"]
-    S["安全审查"]
+  subgraph pack["Token 装箱"]
+    P["稳定前缀"]
+    I["闸指针"]
+    D["Task 增量 / packed diff"]
   end
-  subgraph g5["⑤ 强制两专节"]
-    F["功能真跑"]
-    A["攻防用例"]
-  end
-  g4 --> g5
+  P --> I --> D
 ```
 
 ```mermaid
 flowchart TB
-  AUTH{"外网/生产攻防?"}
-  AUTH -->|未授权| STATIC["静态/本地 only<br/>attack_act=skipped_no_auth"]
-  AUTH -->|case-init granted| ACT["授权范围内 ACT"]
+  R{"④ reviewer"}
+  R -->|不是本批写码槽| OK["对照验收清单 + packed diff"]
+  R -->|Lead 或写码槽自评| FAIL["④未过，重派"]
 ```
